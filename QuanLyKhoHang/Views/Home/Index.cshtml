@@ -1,0 +1,106 @@
+﻿@model IEnumerable<QuanLyKhoHang.Models.Warehouse>
+
+@{
+    ViewData["Title"] = "Danh mục Kho hàng";
+}
+
+<div class="text-center">
+    <h1 class="display-4">@ViewData["Title"]</h1>
+</div>
+
+@* ---- PHẦN ĐƯỢC THÊM VÀO ---- *@
+@* Hiển thị thông báo thành công hoặc thất bại từ Controller *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["ErrorMessage"]
+    </div>
+}
+@* ---- KẾT THÚC PHẦN THÊM VÀO ---- *@
+
+<div class="row mb-3">
+    <div class="col-md-8">
+        <p>
+            <a asp-action="Create" class="btn btn-primary">Thêm mới kho hàng</a>
+            <a asp-action="ExportToExcel" class="btn btn-info">Xuất ra Excel</a>
+            
+            @* ---- NÚT IMPORT ĐƯỢC THÊM VÀO ĐÂY ---- *@
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+              Nhập từ Excel
+            </button>
+        </p>
+    </div>
+
+    <div class="col-md-4">
+        <form asp-action="Index" method="get" class="d-flex">
+            <input type="text" name="searchString" class="form-control" placeholder="Tìm theo mã hoặc tên..." value="@ViewData["CurrentFilter"]" />
+            <button type="submit" class="btn btn-outline-secondary ms-2">Tìm</button>
+        </form>
+    </div>
+</div>
+
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Mã kho</th>
+            <th>Tên kho hàng</th>
+            <th>Địa chỉ</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Code</td>
+                <td>@item.Name</td>
+                <td>@item.Location</td>
+                <td>
+                    @if (item.IsActive == 1)
+                    {
+                        <span class="badge bg-success">Đang hoạt động</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Ngừng hoạt động</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Sửa</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@* ---- POPUP (MODAL) CHO CHỨC NĂNG IMPORT ĐƯỢC THÊM VÀO ĐÂY ---- *@
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form asp-action="ImportFromExcel" method="post" enctype="multipart/form-data">
+        <div class="modal-header">
+          <h5 class="modal-title" id="importModalLabel">Nhập kho hàng từ file Excel</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Dung lượng tối đa 5Mb, chấp nhận file .xls, .xlsx</p>
+          <a asp-action="DownloadTemplate" class="link-primary">Tải về file mẫu</a>
+          <hr/>
+          <input type="file" name="file" id="importFile" class="form-control" required accept=".xls,.xlsx" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-primary">Nhập file</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
