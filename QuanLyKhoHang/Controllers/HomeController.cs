@@ -193,9 +193,7 @@ namespace QuanLyKhoHang.Controllers
 
         public IActionResult DownloadTemplate()
         {
-            // Đặt LicenseContext để tránh lỗi bản quyền của EPPlus
-            // Dòng này phải được đặt trong Program.cs theo hướng dẫn trước
-            // OfficeOpenXml.ExcelPackage.License.SetNonCommercialPersonal("Your Name");
+
 
             using (var package = new ExcelPackage())
             {
