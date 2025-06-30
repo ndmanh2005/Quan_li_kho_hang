@@ -10,5 +10,7 @@ namespace QuanLyKhoHang.Data
         }
 
         public DbSet<Warehouse> Warehouses { get; set; }
+
+        public DbSet<Profession> Professions { get; set; }
     }
 }

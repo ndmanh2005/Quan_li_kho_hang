@@ -302,7 +302,7 @@ public async Task<IActionResult> ImportFromExcel(IFormFile file)
             }
             else
             {
-                // Nếu không có lỗi, lưu vào CSDL
+                
                 if (warehousesToAdd.Any())
                 {
                     _context.Warehouses.AddRange(warehousesToAdd);

@@ -2,7 +2,7 @@
 
 namespace QuanLyKhoHang.Models
 {
-    // Sử dụng tên class là "Warehouse" (viết hoa) cho nhất quán
+
     public class Warehouse 
     {
         public int Id { get; set; }
