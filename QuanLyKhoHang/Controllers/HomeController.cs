@@ -20,17 +20,17 @@ namespace QuanLyKhoHang.Controllers
         }
 
         // --- DANH SÁCH VÀ TÌM KIẾM ---
-        // Hợp nhất 2 hàm Index thành 1, có chức năng tìm kiếm
+       
         public async Task<IActionResult> Index(string searchString)
         {
             ViewData["CurrentFilter"] = searchString;
 
-            // Chắc chắn rằng Warehouses không phải là null
+            
             var warehousesQuery = _context.Warehouses.AsQueryable();
 
             if (!String.IsNullOrEmpty(searchString))
             {
-                // Tìm kiếm theo Code hoặc Name
+                
                 warehousesQuery = warehousesQuery.Where(w => w.Code.Contains(searchString) || w.Name.Contains(searchString));
             }
 
@@ -39,13 +39,13 @@ namespace QuanLyKhoHang.Controllers
         }
 
         // --- THÊM MỚI ---
-        // GET: Hiển thị form để tạo mới
+      
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Xử lý dữ liệu thêm mới từ form
+        // Xử lý dữ liệu thêm mới từ form
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Code,Name,Location")] Warehouse warehouse)

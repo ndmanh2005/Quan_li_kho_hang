@@ -116,7 +116,7 @@ namespace QuanLyKhoHang.Controllers
                 return NotFound();
             }
 
-            // KIỂM TRA RÀNG BUỘC VỚI BẢNG USER ĐƯỢC THÊM VÀO SAU
+            // KIỂM TRA BẢNG USER ĐƯỢC THÊM VÀO SAU
 
 
             role.IsActive = -1;
@@ -137,13 +137,13 @@ namespace QuanLyKhoHang.Controllers
                 return NotFound();
             }
 
-            // Lấy danh sách các quyền hiện tại của role này
+            
             var currentPermissions = await _context.RolePermissions
                                                    .Where(rp => rp.RoleId == id)
                                                    .ToListAsync();
             
-            // Định nghĩa danh sách các chức năng trong hệ thống
-            // Trong một dự án thực tế, danh sách này có thể được lấy từ CSDL hoặc một file cấu hình
+            
+            
             ViewBag.Functions = new List<string> { "WAREHOUSE", "PROFESSION", "ROLE", "CUSTOMER", "SUPPLIER" };
             
             ViewBag.RoleName = role.Name;
