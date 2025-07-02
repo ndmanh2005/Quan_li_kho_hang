@@ -1,4 +1,4 @@
-// File: QuanLyKhoHang/Models/warehouse.cs
+
 
 namespace QuanLyKhoHang.Models
 {

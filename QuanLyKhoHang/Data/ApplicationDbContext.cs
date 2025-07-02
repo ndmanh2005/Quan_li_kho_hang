@@ -12,5 +12,8 @@ namespace QuanLyKhoHang.Data
         public DbSet<Warehouse> Warehouses { get; set; }
 
         public DbSet<Profession> Professions { get; set; }
+
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
     }
 }
