@@ -16,8 +16,7 @@ namespace QuanLyKhoHang.Controllers
             _context = context;
         }
 
-        // GET: /Professions
-        // Hiển thị danh sách ngành nghề
+
         public async Task<IActionResult> Index(string searchString)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -35,15 +34,12 @@ namespace QuanLyKhoHang.Controllers
             return View(professions);
         }
         
-        // POST: /Professions/Create
-        // Xử lý logic thêm mới
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Code,Name,IsActive")] Profession profession)
         {
             if (ModelState.IsValid)
             {
-                // Kiểm tra mã trùng
                 var existingProfession = await _context.Professions.FirstOrDefaultAsync(p => p.Code == profession.Code && p.IsActive != -1);
                 if (existingProfession != null)
                 {
@@ -53,8 +49,6 @@ namespace QuanLyKhoHang.Controllers
 
                 profession.CreatedAt = DateTime.Now;
                 profession.ModifiedAt = DateTime.Now;
-                // Giả sử có một user id, bạn sẽ gán vào đây
-                // profession.CreatedUser = ...; 
 
                 _context.Add(profession);
                 await _context.SaveChangesAsync();
@@ -62,13 +56,10 @@ namespace QuanLyKhoHang.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Nếu model không hợp lệ, quay lại trang Index và hiển thị lỗi (cần xử lý ở view)
             TempData["ErrorMessage"] = "Thông tin không hợp lệ, vui lòng thử lại.";
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: /Professions/Edit/5
-        // Xử lý logic cập nhật
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Code,Name,IsActive")] Profession profession)
@@ -88,7 +79,6 @@ namespace QuanLyKhoHang.Controllers
                         return NotFound();
                     }
 
-                    // Cập nhật các trường cho phép sửa
                     professionToUpdate.Name = profession.Name;
                     professionToUpdate.IsActive = profession.IsActive;
                     professionToUpdate.ModifiedAt = DateTime.Now;
@@ -114,8 +104,6 @@ namespace QuanLyKhoHang.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: /Professions/Delete/5
-        // Xử lý logic xóa (xóa mềm)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -130,7 +118,6 @@ namespace QuanLyKhoHang.Controllers
 
             profession.IsActive = -1; // Đánh dấu là đã xóa
             profession.DeletedAt = DateTime.Now;
-            // profession.DeletedUser = ...;
 
             _context.Update(profession);
             await _context.SaveChangesAsync();

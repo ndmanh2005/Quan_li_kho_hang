@@ -1,138 +1,41 @@
 @model IEnumerable<QuanLyKhoHang.Models.Role>
 
 @{
-    ViewData["Title"] = "Danh mục Nhóm quyền";
+    ViewData["Title"] = "Danh sách Vai trò";
 }
 
-<div class="text-center">
-    <h1 class="display-4">@ViewData["Title"]</h1>
-</div>
+<h1>@ViewData["Title"]</h1>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success" role="alert">@TempData["SuccessMessage"]</div>
-}
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger" role="alert">@TempData["ErrorMessage"]</div>
-}
+<p>
+    <a asp-action="Create" class="btn btn-primary">Thêm mới Vai trò</a>
+</p>
 
-<div class="row mb-3">
-    <div class="col-md-8">
-        <p>
-            <button type="button" id="show-add-row-btn" class="btn btn-primary">Thêm mới Nhóm quyền</button>
-        </p>
-    </div>
-    <div class="col-md-4">
-        <form asp-action="Index" method="get" class="d-flex">
-            <input type="text" name="searchString" class="form-control" placeholder="Tìm theo mã hoặc tên..." value="@ViewData["CurrentFilter"]" />
-            <button type="submit" class="btn btn-outline-secondary ms-2">Tìm</button>
-        </form>
-    </div>
-</div>
-
-<form id="rolesForm" method="post">
-    @Html.AntiForgeryToken()
-    <table class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>Mã</th>
-                <th>Tên Nhóm quyền</th>
-                <th>Mô tả</th>
-                <th>Trạng thái</th>
-                <th style="width: 200px;">Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr id="add-row" style="display: none;">
-                <td><input type="text" name="Code" class="form-control" placeholder="Mã nhóm quyền..." required /></td>
-                <td><input type="text" name="Name" class="form-control" placeholder="Tên nhóm quyền..." required /></td>
-                <td><input type="text" name="Description" class="form-control" placeholder="Mô tả..." /></td>
-                <td>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="IsActive" value="1" checked>
-                        <input type="hidden" name="IsActive" value="0" />
-                    </div>
-                </td>
-                <td>
-                    <button type="submit" formaction="@Url.Action("Create")" class="btn btn-success btn-sm">Lưu</button>
-                    <button type="button" id="hide-add-row-btn" class="btn btn-secondary btn-sm">Hủy</button>
-                </td>
-            </tr>
-
-            @foreach (var item in Model)
-            {
-                <tr class="data-row">
-                    <td>@item.Code</td>
-                    <td>@item.Name</td>
-                    <td>@item.Description</td>
-                    <td>
-                        @if (item.IsActive == 1)
-                        { <span class="badge bg-success">Đang hoạt động</span> }
-                        else
-                        { <span class="badge bg-secondary">Ngừng hoạt động</span> }
-                    </td>
-                    <td>
-                        <a href="@Url.Action("Authorize", "Roles", new { id = item.Id })" class="btn btn-info btn-sm">Phân quyền</a>
-                        <a href="#" class="btn btn-warning btn-sm edit-inline-btn">Sửa</a>
-                        <button type="submit" formaction="@Url.Action("Delete", new { id = item.Id })" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa bản ghi này không?');">Xóa</button>
-                    </td>
-                </tr>
-                
-                <tr class="edit-row" style="display: none;">
-                    <td><input type="text" class="form-control" value="@item.Code" readonly /></td>
-                    <td><input type="text" name="Name" class="form-control" value="@item.Name" required /></td>
-                    <td><input type="text" name="Description" class="form-control" value="@item.Description" /></td>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="IsActive" value="1" @(item.IsActive == 1 ? "checked" : "")>
-                            <input type="hidden" name="IsActive" value="0" />
-                        </div>
-                    </td>
-                    <td>
-                        <button type="submit" formaction="@Url.Action("Edit", new { id = item.Id })" class="btn btn-success btn-sm">Lưu</button>
-                        <a href="#" class="btn btn-secondary btn-sm cancel-edit-btn">Hủy</a>
-                        <input type="hidden" name="Id" value="@item.Id" />
-                        <input type="hidden" name="Code" value="@item.Code" />
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</form>
-
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            $('#show-add-row-btn').on('click', function () {
-                $('#add-row').show();
-                $(this).hide();
-            });
-
-            $('#hide-add-row-btn').on('click', function () {
-                $('#add-row').hide();
-                $('#show-add-row-btn').show();
-            });
-
-            $('.edit-inline-btn').on('click', function (e) {
-                e.preventDefault();
-                var dataRow = $(this).closest('.data-row');
-                var editRow = dataRow.next('.edit-row');
-                dataRow.hide();
-                editRow.show();
-            });
-
-            $('.cancel-edit-btn').on('click', function (e) {
-                e.preventDefault();
-                var editRow = $(this).closest('.edit-row');
-                var dataRow = editRow.prev('.data-row');
-                editRow.hide();
-                dataRow.show();
-            });
-
-            $('input[type="checkbox"][name="IsActive"]').on('change', function() {
-                $(this).next('input[type="hidden"]').prop('disabled', this.checked);
-            }).trigger('change');
-        });
-    </script>
-}
+<table class="table table-striped table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Description)
+            </th>
+            <th style="width: 150px;">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-info">Sửa</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Xóa</a>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>

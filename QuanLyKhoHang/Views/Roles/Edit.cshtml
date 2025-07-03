@@ -1,0 +1,141 @@
+@model QuanLyKhoHang.Models.RoleManagementViewModel
+@using QuanLyKhoHang.Helpers
+@using System.Linq
+
+@{
+    bool isCreate = Model.Id == 0;
+    ViewData["Title"] = isCreate ? "Thêm mới Vai trò" : "Chỉnh sửa Vai trò";
+    var formAction = isCreate ? "Create" : "Edit";
+
+    var menuItems = ViewData["MenuItems"] as List<MenuItem>;
+    var actions = ViewData["Actions"] as List<string>;
+    var rootMenuItems = menuItems!.Where(m => m.ParentName == null).ToList();
+
+    ViewData["SelectedPermissions"] = Model.SelectedPermissions;
+}
+
+<style>
+    .parent-row > td:first-child {
+        cursor: pointer;
+        user-select: none; 
+    }
+</style>
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="@formAction">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @if (!isCreate)
+            {
+                <input type="hidden" asp-for="Id" />
+            }
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="RoleName" class="control-label"></label>
+                        <input asp-for="RoleName" class="form-control" />
+                        <span asp-validation-for="RoleName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                     <div class="form-group">
+                        <label asp-for="Description" class="control-label"></label>
+                        <input asp-for="Description" class="form-control" />
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4">Chi tiết vai trò</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 35%;">Menu</th>
+                            @foreach (var action in actions!)
+                            {
+                                <th class="text-center" style="width: 13%;">
+                                    @action <br>
+                                    <input type="checkbox" class="master-select-all" data-action="@action" title="Chọn/Bỏ chọn tất cả trong cột này" />
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        @foreach (var rootItem in rootMenuItems)
+                        {
+                            <partial name="_RenderMenuItemsPartial" model="rootItem" view-data='new ViewDataDictionary(ViewData) { { "Level", 0 } }'/>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-group mt-3">
+                <input type="submit" value="@(isCreate ? "Tạo mới" : "Lưu thay đổi")" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+    $(document).ready(function () {
+
+        function updateParentCheckboxes(childCheckbox) {
+            const group = $(childCheckbox).closest('tr').data('group');
+            const action = $(childCheckbox).data('action');
+
+            const $groupCheckboxes = $(`.permission-checkbox[data-group="${group}"][data-action="${action}"]:not(:disabled)`);
+            const allInGroupChecked = $groupCheckboxes.length > 0 && $groupCheckboxes.filter(':checked').length === $groupCheckboxes.length;
+            $(`.group-select-all[data-group="${group}"][data-action="${action}"]`).prop('checked', allInGroupChecked);
+
+            const $allGroupCheckboxes = $(`.group-select-all[data-action="${action}"]`);
+            const allGroupsChecked = $allGroupCheckboxes.length > 0 && $allGroupCheckboxes.filter(':checked').length === $allGroupCheckboxes.length;
+            $(`.master-select-all[data-action="${action}"]`).prop('checked', allGroupsChecked);
+        }
+        
+        $('.master-select-all').on('change', function () {
+            const action = $(this).data('action');
+            const isChecked = $(this).is(':checked');
+            $(`.group-select-all[data-action="${action}"], .permission-checkbox[data-action="${action}"]:not(:disabled)`).prop('checked', isChecked);
+        });
+        
+        $('.group-select-all').on('change', function () {
+            const group = $(this).data('group');
+            const action = $(this).data('action');
+            const isChecked = $(this).is(':checked');
+            $(`tr[data-group="${group}"] .permission-checkbox[data-action="${action}"]:not(:disabled)`).prop('checked', isChecked);
+            updateParentCheckboxes(this);
+        });
+
+        $('.permission-checkbox').on('change', function () {
+            updateParentCheckboxes(this);
+        });
+        
+
+        $('.table').on('click', '.parent-row > td:first-child', function(e) {
+            var parentRow = $(this).parent();
+            var parentMenuName = parentRow.data('menu-name');
+            $(`tr[data-parent-name="${parentMenuName}"]`).toggle();
+
+            var icon = parentRow.find('.toggle-icon');
+            if (icon.text().trim() === '▶') {
+                icon.text('▼');
+            } else {
+                icon.text('▶');
+            }
+        });
+        
+        $('.permission-checkbox:not(:disabled)').each(function() {
+            updateParentCheckboxes(this);
+        });
+    });
+    </script>
+}

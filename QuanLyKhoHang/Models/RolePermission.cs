@@ -15,14 +15,6 @@ namespace QuanLyKhoHang.Models
         public virtual Role? Role { get; set; }
 
         [Required]
-        [StringLength(100)]
-        public string FunctionCode { get; set; } = string.Empty;
-
-        public bool CanView { get; set; } = false;
-        public bool CanCreate { get; set; } = false;
-        public bool CanEdit { get; set; } = false;
-        public bool CanDelete { get; set; } = false;
-        public bool CanImport { get; set; } = false;
-        public bool CanExport { get; set; } = false;
+        public string PermissionValue { get; set; } = string.Empty;
     }
 }

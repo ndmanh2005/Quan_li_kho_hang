@@ -1,0 +1,80 @@
+@model QuanLyKhoHang.Helpers.MenuItem
+@using QuanLyKhoHang.Helpers
+
+@{
+    var allItems = ViewData["MenuItems"] as List<MenuItem>;
+    var actions = ViewData["Actions"] as List<string>;
+    var selectedPermissions = ViewData["SelectedPermissions"] as List<string>;
+    var level = (int)ViewData["Level"]!;
+}
+
+@{
+    bool isParentNode = allItems!.Any(m => m.ParentName == Model.Name);
+    var paddingLeft = 20 * level;
+    var initialStyle = level > 0 ? "display: none;" : "";
+    
+    var rowClass = "";
+    if (isParentNode) {
+        rowClass = "parent-row";
+    }
+    if (level == 0) {
+        rowClass += " table-secondary";
+    }
+}
+
+<tr class="@rowClass" data-menu-name="@Model.Name" data-parent-name="@(Model.ParentName ?? "")" style="@initialStyle" data-group="@Model.GroupName">
+    <td style="padding-left: @(paddingLeft)px;">
+        @if (isParentNode)
+        {
+            <span class="toggle-icon me-2" style="font-family: monospace;">▶</span>
+        }
+        <strong>@Model.DisplayName</strong>
+    </td>
+
+    @foreach (var action in actions!)
+    {
+        if(level == 0)
+        {
+            <td class="text-center">
+                <input type="checkbox" class="group-select-all" data-group="@Model.GroupName" data-action="@action" />
+            </td>
+        }
+        else 
+        {
+
+            if (Model.AvailableActions == null || Model.AvailableActions.Contains(action))
+            {
+                var permissionKey = PermissionHelper.GeneratePermissionKey(Model.Name, action);
+                var isChecked = selectedPermissions!.Contains(permissionKey);
+                var isDisabled = isParentNode;
+
+                <td class="text-center">
+                    <input class="form-check-input permission-checkbox"
+                           type="checkbox"
+                           name="SelectedPermissions"
+                           value="@permissionKey"
+                           id="@permissionKey"
+                           data-action="@action"
+                           @(isChecked ? "checked" : "")
+                           @(isDisabled ? "disabled" : "")>
+                </td>
+            }
+            else
+            {
+                <td></td> 
+            }
+        }
+    }
+</tr>
+
+
+@{
+    var children = allItems.Where(m => m.ParentName == Model.Name).ToList();
+}
+@foreach (var child in children)
+{
+    var viewDataForChild = new ViewDataDictionary(ViewData);
+    viewDataForChild["Level"] = level + 1;
+
+    <partial name="_RenderMenuItemsPartial" model="child" view-data="viewDataForChild" />
+}
