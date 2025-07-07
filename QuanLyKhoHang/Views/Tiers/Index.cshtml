@@ -1,0 +1,230 @@
+@{
+    ViewData["Title"] = "Danh mục Hạng khách hàng";
+}
+
+<style>
+    .editing-row td {
+        padding: 0.25rem !important;
+        vertical-align: middle;
+    }
+    #editable-row-template {
+        display: none;
+    }
+</style>
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row mb-3 align-items-center">
+    <div class="col-md-6">
+        <div class="input-group">
+            <input type="text" id="search-input" class="form-control" placeholder="Nhập tên hạng để tìm kiếm...">
+            <button id="btn-search" class="btn btn-outline-secondary" type="button">Tìm kiếm</button>
+        </div>
+    </div>
+    <div class="col-md-6 text-end">
+        <button id="btn-show-add-form" class="btn btn-primary">Thêm mới</button>
+        <button class="btn btn-outline-secondary">Xuất Excel</button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Tên hạng</th>
+                <th>Mức chi tiêu (Min-Max)</th>
+                <th>Số đơn (Min-Max)</th>
+                <th>Số điểm (Min-Max)</th>
+                <th class="text-center">Mặc định</th>
+                <th class="text-center">Trạng thái</th>
+                <th style="width: 120px;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody id="tier-table-body">
+        </tbody>
+    </table>
+</div>
+
+<table style="display:none">
+    <tr id="editable-row-template">
+        <td><input type="text" name="Name" class="form-control" /></td>
+        <td>
+            <input type="number" name="MinSpent" placeholder="Tối thiểu" class="form-control mb-1" />
+            <input type="number" name="MaxSpent" placeholder="Tối đa" class="form-control" />
+        </td>
+        <td>
+            <input type="number" name="MinOrders" placeholder="Tối thiểu" class="form-control mb-1" />
+            <input type="number" name="MaxOrders" placeholder="Tối đa" class="form-control" />
+        </td>
+        <td>
+            <input type="number" name="MinPoint" placeholder="Tối thiểu" class="form-control mb-1" />
+            <input type="number" name="MaxPoint" placeholder="Tối đa" class="form-control" />
+        </td>
+        <td class="text-center align-middle">
+            <div class="form-check form-switch d-flex justify-content-center">
+                <input class="form-check-input" type="checkbox" name="IsDefault">
+            </div>
+        </td>
+        <td class="text-center align-middle">
+            <div class="form-check form-switch d-flex justify-content-center">
+                <input class="form-check-input" type="checkbox" name="IsActive">
+            </div>
+        </td>
+        <td>
+            <button class="btn-save btn btn-sm btn-success">Lưu</button>
+            <button class="btn-cancel btn btn-sm btn-secondary">Hủy</button>
+        </td>
+    </tr>
+</table>
+
+
+@section Scripts {
+<script>
+$(document).ready(function() {
+    const $tableBody = $('#tier-table-body');
+    const $templateRow = $('#editable-row-template');
+
+
+    function fetchAndRenderTiers(searchTerm) {
+        $.ajax({
+            url: '@Url.Action("SearchTiers", "Tiers")',
+            type: 'GET',
+            data: { searchTerm: searchTerm },
+            success: function(tiers) {
+                $tableBody.empty(); 
+                if (!tiers || tiers.length === 0) {
+                    $tableBody.append('<tr><td colspan="7" class="text-center">Không có dữ liệu</td></tr>');
+                    return;
+                }
+
+                tiers.forEach(function(item) {
+                    const defaultMark = item.isDefault ? '<i class="fa-solid fa-check text-success"></i>' : '';
+                    const statusText = item.isActive ? 'Hoạt động' : 'Ngừng';
+                    const rowHtml = `
+                        <tr data-id="${item.id}">
+                            <td data-prop="name">${item.name}</td>
+                            <td data-prop="spent" data-min="${item.minSpent || ''}" data-max="${item.maxSpent || ''}">${item.minSpent || ''} - ${item.maxSpent || ''}</td>
+                            <td data-prop="orders" data-min="${item.minOrders || ''}" data-max="${item.maxOrders || ''}">${item.minOrders || ''} - ${item.maxOrders || ''}</td>
+                            <td data-prop="point" data-min="${item.minPoint || ''}" data-max="${item.maxPoint || ''}">${item.minPoint || ''} - ${item.maxPoint || ''}</td>
+                            <td class="text-center" data-prop="isDefault" data-value="${item.isDefault}">${defaultMark}</td>
+                            <td class="text-center" data-prop="isActive" data-value="${item.isActive}">${statusText}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info btn-edit">Sửa</button>
+                                <button class="btn btn-sm btn-danger btn-delete">Xóa</button>
+                            </td>
+                        </tr>`;
+                    $tableBody.append(rowHtml);
+                });
+            }
+        });
+    }
+
+
+    $('#btn-search').on('click', function() {
+        fetchAndRenderTiers($('#search-input').val());
+    });
+    $('#search-input').on('keypress', function(e) {
+        if (e.which === 13) $('#btn-search').click();
+    });
+
+    $('#btn-show-add-form').on('click', function() {
+        if ($('#add-new-tier-row').length > 0) return; 
+        const $newRow = $templateRow.clone().attr('id', 'add-new-tier-row');
+        $newRow.find('.btn-save').addClass('btn-save-new');
+        $newRow.find('input[name="IsActive"]').prop('checked', true); 
+        $tableBody.prepend($newRow);
+        $(this).prop('disabled', true); // Vô hiệu hóa nút "Thêm mới"
+    });
+
+    $tableBody.on('click', '.btn-edit', function() {
+        const $staticRow = $(this).closest('tr');
+        $staticRow.data('original-html', $staticRow.html());
+        
+        const $editRow = $templateRow.clone().removeAttr('id').addClass('editing-row');
+        
+        $editRow.find('input[name="Name"]').val($staticRow.find('[data-prop="name"]').text());
+        $editRow.find('input[name="MinSpent"]').val($staticRow.find('[data-prop="spent"]').data('min'));
+        $editRow.find('input[name="MaxSpent"]').val($staticRow.find('[data-prop="spent"]').data('max'));
+        $editRow.find('input[name="MinOrders"]').val($staticRow.find('[data-prop="orders"]').data('min'));
+        $editRow.find('input[name="MaxOrders"]').val($staticRow.find('[data-prop="orders"]').data('max'));
+        $editRow.find('input[name="MinPoint"]').val($staticRow.find('[data-prop="point"]').data('min'));
+        $editRow.find('input[name="MaxPoint"]').val($staticRow.find('[data-prop="point"]').data('max'));
+        $editRow.find('input[name="IsDefault"]').prop('checked', $staticRow.find('[data-prop="isDefault"]').data('value'));
+        $editRow.find('input[name="IsActive"]').prop('checked', $staticRow.find('[data-prop="isActive"]').data('value'));
+        
+        $editRow.find('.btn-save').addClass('btn-update').data('id', $staticRow.data('id'));
+        $staticRow.html($editRow.html());
+    });
+    
+    $tableBody.on('click', '.btn-cancel', function() {
+        const $row = $(this).closest('tr');
+        if ($row.attr('id') === 'add-new-tier-row') {
+            $row.remove();
+            $('#btn-show-add-form').prop('disabled', false);
+        } else {
+            $row.html($row.data('original-html'));
+        }
+    });
+
+    $tableBody.on('click', '.btn-save', function() {
+        const $row = $(this).closest('tr');
+        const isUpdate = $(this).hasClass('btn-update');
+        const url = isUpdate ? '@Url.Action("Update", "Tiers")' : '@Url.Action("Create", "Tiers")';
+        
+        const formData = new FormData();
+        if (isUpdate) {
+            formData.append('Id', $(this).data('id'));
+        }
+        formData.append('Name', $row.find('input[name="Name"]').val());
+        formData.append('MinSpent', $row.find('input[name="MinSpent"]').val());
+        formData.append('MaxSpent', $row.find('input[name="MaxSpent"]').val());
+        formData.append('MinOrders', $row.find('input[name="MinOrders"]').val());
+        formData.append('MaxOrders', $row.find('input[name="MaxOrders"]').val());
+        formData.append('MinPoint', $row.find('input[name="MinPoint"]').val());
+        formData.append('MaxPoint', $row.find('input[name="MaxPoint"]').val());
+        formData.append('IsDefault', $row.find('input[name="IsDefault"]').is(':checked'));
+        formData.append('IsActive', $row.find('input[name="IsActive"]').is(':checked'));
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    alert(isUpdate ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+                    $('#btn-show-add-form').prop('disabled', false);
+                    fetchAndRenderTiers($('#search-input').val()); 
+                } else {
+                    alert('Lỗi: ' + response.message);
+                }
+            }
+        });
+    });
+
+    $tableBody.on('click', '.btn-delete', function() {
+        if (!confirm('Bạn có chắc chắn muốn xóa hạng này?')) return;
+
+        const $row = $(this).closest('tr');
+        const id = $row.data('id');
+
+        $.ajax({
+            url: '@Url.Action("Delete", "Tiers")',
+            type: 'POST',
+            data: { id: id },
+            success: function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    $row.fadeOut(300, function() { $(this).remove(); });
+                } else {
+                    alert('Lỗi: ' + response.message);
+                }
+            }
+        });
+    });
+
+    fetchAndRenderTiers('');
+});
+</script>
+}

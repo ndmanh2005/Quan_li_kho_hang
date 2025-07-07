@@ -22,7 +22,7 @@ namespace QuanLyKhoHang.Controllers
             ViewData["CurrentFilter"] = searchString;
 
             var professionsQuery = _context.Professions
-                                           .Where(p => p.IsActive != -1) // Chỉ lấy các bản ghi không bị xóa mềm
+                                           .Where(p => p.IsActive != -1) 
                                            .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -116,7 +116,7 @@ namespace QuanLyKhoHang.Controllers
 
 
 
-            profession.IsActive = -1; // Đánh dấu là đã xóa
+            profession.IsActive = -1; 
             profession.DeletedAt = DateTime.Now;
 
             _context.Update(profession);

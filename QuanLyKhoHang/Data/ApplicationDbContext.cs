@@ -14,6 +14,9 @@ namespace QuanLyKhoHang.Data
         public DbSet<Profession> Professions { get; set; }
 
         public DbSet<Role> Roles { get; set; }
+
+        public DbSet<Tier> Tiers { get; set; }
+        public DbSet<HistoryTier> HistoryTiers { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
     }
 }

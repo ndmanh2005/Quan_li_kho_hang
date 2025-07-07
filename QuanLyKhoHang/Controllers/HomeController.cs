@@ -45,7 +45,6 @@ namespace QuanLyKhoHang.Controllers
             return View();
         }
 
-        // Xử lý dữ liệu thêm mới từ form
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Code,Name,Location")] Warehouse warehouse)
@@ -65,7 +64,6 @@ namespace QuanLyKhoHang.Controllers
         }
 
         // --- SỬA ---
-        // GET: Hiển thị form để sửa, với thông tin của kho hàng có id được truyền vào
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -81,7 +79,6 @@ namespace QuanLyKhoHang.Controllers
             return View(warehouse);
         }
 
-        // POST: Xử lý lưu thông tin sau khi sửa
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Code,Name,Location,IsActive,IsDefault,CreatedAt")] Warehouse warehouse)
@@ -116,7 +113,6 @@ namespace QuanLyKhoHang.Controllers
         }
 
         // --- XÓA ---
-        // GET: Hiển thị trang xác nhận trước khi xóa
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -133,7 +129,6 @@ namespace QuanLyKhoHang.Controllers
             return View(warehouse);
         }
 
-        // POST: Thực hiện xóa kho hàng
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -149,7 +144,6 @@ namespace QuanLyKhoHang.Controllers
         }
         public async Task<IActionResult> ExportToExcel()
         {
-            // Lấy danh sách toàn bộ kho hàng từ database
             var warehouses = await _context.Warehouses.ToListAsync();
 
 
@@ -158,18 +152,16 @@ namespace QuanLyKhoHang.Controllers
             {
                 var worksheet = package.Workbook.Worksheets.Add("DanhSachKhoHang");
 
-                // --- Tạo Header ---
                 worksheet.Cells[1, 1].Value = "STT";
                 worksheet.Cells[1, 2].Value = "Mã kho";
                 worksheet.Cells[1, 3].Value = "Tên kho hàng";
                 worksheet.Cells[1, 4].Value = "Địa chỉ";
                 worksheet.Cells[1, 5].Value = "Trạng thái";
 
-                // --- Thêm dữ liệu ---
                 for (int i = 0; i < warehouses.Count; i++)
                 {
                     var warehouse = warehouses[i];
-                    int rowIndex = i + 2; // Bắt đầu từ dòng 2
+                    int rowIndex = i + 2; 
 
                     worksheet.Cells[rowIndex, 1].Value = i + 1;
                     worksheet.Cells[rowIndex, 2].Value = warehouse.Code;
@@ -178,10 +170,8 @@ namespace QuanLyKhoHang.Controllers
                     worksheet.Cells[rowIndex, 5].Value = (warehouse.IsActive == 1) ? "Đang hoạt động" : "Ngừng hoạt động";
                 }
 
-                // Tự động điều chỉnh độ rộng của các cột
                 worksheet.Cells.AutoFitColumns();
 
-                // --- Trả file về cho client ---
                 var stream = new MemoryStream();
                 await package.SaveAsAsync(stream);
                 stream.Position = 0;
@@ -266,7 +256,6 @@ public async Task<IActionResult> ImportFromExcel(IFormFile file)
                     continue;
                 }
 
-                // Nếu không có lỗi, thêm vào danh sách chờ
                 warehousesToAdd.Add(new Warehouse
                 {
                     Code = code,
@@ -279,10 +268,8 @@ public async Task<IActionResult> ImportFromExcel(IFormFile file)
                 });
             }
 
-            // --- Vòng 2: Xử lý kết quả ---
             if (errorRows.Count > 0)
             {
-                // Nếu có lỗi, thêm cột "Lỗi" và ghi chú thích
                 var errorColumn = worksheet.Dimension.Columns + 1;
                 worksheet.Cells[1, errorColumn].Value = "Lỗi";
                 worksheet.Cells[1, errorColumn].Style.Font.Bold = true;
@@ -292,7 +279,6 @@ public async Task<IActionResult> ImportFromExcel(IFormFile file)
                     worksheet.Cells[error.Row, errorColumn].Value = error.ErrorMessage;
                 }
                 
-                // Lưu file có báo lỗi vào một stream mới để trả về
                 var errorStream = new MemoryStream();
                 await package.SaveAsAsync(errorStream);
                 errorStream.Position = 0;
