@@ -1,0 +1,125 @@
+@{
+    ViewData["Title"] = "Quản lý Người dùng";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row mb-3 align-items-center">
+    <div class="col-md-6">
+        <div class="input-group">
+            <input type="text" id="search-input" class="form-control" placeholder="Nhập tên, email hoặc SĐT...">
+            <button id="btn-search" class="btn btn-outline-secondary" type="button">Tìm kiếm</button>
+        </div>
+    </div>
+    <div class="col-md-6 text-end">
+        <button id="btn-add-new-user" class="btn btn-primary">Thêm mới</button>
+        <button class="btn btn-outline-secondary">Xuất Excel</button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Họ và Tên</th>
+                <th>Email</th>
+                <th>Số điện thoại</th>
+                <th class="text-center">Trạng thái</th>
+                <th style="width: 150px;" class="text-center">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody id="user-table-body">
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+$(document).ready(function() {
+    const $tableBody = $('#user-table-body');
+
+    function fetchAndRenderUsers(searchTerm) {
+        $.ajax({
+            url: '@Url.Action("Search", "Users")',
+            type: 'GET',
+            data: { searchTerm: searchTerm },
+            success: function(users) {
+                $tableBody.empty();
+                if (!users || users.length === 0) {
+                    $tableBody.append('<tr><td colspan="5" class="text-center">Không tìm thấy người dùng.</td></tr>');
+                    return;
+                }
+                users.forEach(function(user) {
+                    const status = user.locked 
+                        ? '<span class="badge bg-danger">Bị khóa</span>' 
+                        : '<span class="badge bg-success">Hoạt động</span>';
+                    const lockIcon = user.locked ? 'fa-unlock' : 'fa-lock';
+                    const lockTitle = user.locked ? 'Mở khóa' : 'Khóa';
+
+                    const actionsHtml = `
+                        <td class="text-center">
+                            <a href="/UserRoles/Assign/${user.id}" class="btn btn-sm btn-secondary" title="Phân quyền">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </a>
+                            <button class="btn btn-sm btn-warning btn-toggle-lock" title="${lockTitle}" data-id="${user.id}">
+                                <i class="fa-solid ${lockIcon}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-delete" title="Xóa" data-id="${user.id}">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>`;
+
+                    const rowHtml = `
+                        <tr data-id="${user.id}">
+                            <td>${user.fullName}</td>
+                            <td>${user.email}</td>
+                            <td>${user.phoneNumber || ''}</td>
+                            <td class="text-center user-status">${status}</td>
+                            ${actionsHtml}
+                        </tr>`;
+                    $tableBody.append(rowHtml);
+                });
+            }
+        });
+    }
+
+    $('#btn-search').on('click', function() {
+        fetchAndRenderUsers($('#search-input').val());
+    });
+    $('#search-input').on('keypress', function(e) {
+        if (e.which === 13) $('#btn-search').click();
+    });
+
+    $tableBody.on('click', '.btn-toggle-lock', function() {
+        const userId = $(this).data('id');
+        const $button = $(this);
+        const isCurrentlyLocked = $button.find('i').hasClass('fa-unlock');
+        const message = isCurrentlyLocked ? 'Bạn có chắc chắn muốn MỞ KHÓA người dùng này?' : 'Bạn có chắc chắn muốn KHÓA người dùng này?';
+
+        if (!confirm(message)) return;
+
+        $.ajax({
+            url: '@Url.Action("ToggleLock", "Users")',
+            type: 'POST',
+            data: { id: userId },
+            success: function(response) {
+                if (response.success) {
+                    alert('Thao tác thành công!');
+                    const newStatus = response.locked ? '<span class="badge bg-danger">Bị khóa</span>' : '<span class="badge bg-success">Hoạt động</span>';
+                    const newIcon = response.locked ? 'fa-unlock' : 'fa-lock';
+                    const newTitle = response.locked ? 'Mở khóa' : 'Khóa';
+                    
+                    const $row = $button.closest('tr');
+                    $row.find('.user-status').html(newStatus);
+                    $button.attr('title', newTitle).find('i').removeClass('fa-lock fa-unlock').addClass(newIcon);
+                } else {
+                    alert('Lỗi: ' + response.message);
+                }
+            }
+        });
+    });
+
+    fetchAndRenderUsers('');
+});
+</script>
+}

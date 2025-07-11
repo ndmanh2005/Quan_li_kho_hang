@@ -20,5 +20,10 @@ namespace QuanLyKhoHang.Data
         public DbSet<RolePermission> RolePermissions { get; set; }
 
         public DbSet<CustomerSource> CustomerSources { get; set; }
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<Enterprise> Enterprises { get; set; }
+        public DbSet<EnterpriseUser> EnterpriseUsers { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
     }
 }

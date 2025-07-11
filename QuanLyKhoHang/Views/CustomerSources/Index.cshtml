@@ -3,13 +3,7 @@
 }
 
 <style>
-    #editable-row-template {
-        display: none;
-    }
-    .form-switch .form-check-input {
-        width: 3em;
-        height: 1.5em;
-    }
+    .form-switch .form-check-input { width: 3em; height: 1.5em; }
 </style>
 
 <h1>@ViewData["Title"]</h1>
@@ -22,7 +16,9 @@
         </div>
     </div>
     <div class="col-md-6 text-end">
-        <button id="btn-show-add-form" class="btn btn-primary">Thêm mới</button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSourceModal">
+            Thêm mới
+        </button>
         <button class="btn btn-outline-secondary">Xuất Excel</button>
     </div>
 </div>
@@ -42,28 +38,42 @@
     </table>
 </div>
 
-<table>
-    <tr id="editable-row-template">
-        <td><input type="text" name="Code" class="form-control" /></td>
-        <td><input type="text" name="Name" class="form-control" /></td>
-        <td class="text-center align-middle">
-            <div class="form-check form-switch d-flex justify-content-center">
-                <input class="form-check-input" type="checkbox" name="IsActive">
+<div class="modal fade" id="addSourceModal" tabindex="-1" aria-labelledby="addSourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSourceModalLabel">Thêm mới Nguồn khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-        </td>
-        <td>
-            <button class="btn-save btn btn-sm btn-success">Lưu</button>
-            <button class="btn-cancel btn btn-sm btn-secondary">Hủy</button>
-        </td>
-    </tr>
-</table>
+            <div class="modal-body">
+                <form id="add-new-source-form">
+                    <div class="mb-3">
+                        <label for="new-source-code" class="form-label">Mã nguồn</label>
+                        <input type="text" class="form-control" id="new-source-code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new-source-name" class="form-label">Tên nguồn</label>
+                        <input type="text" class="form-control" id="new-source-name" required>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="new-source-isactive" checked>
+                        <label class="form-check-label" for="new-source-isactive">Đang hoạt động</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" id="btn-save-new-source" class="btn btn-primary">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 @section Scripts {
 <script>
 $(document).ready(function() {
     const $tableBody = $('#source-table-body');
-    const $templateRow = $('#editable-row-template');
 
     function fetchAndRender(searchTerm) {
         $.ajax({
@@ -79,10 +89,10 @@ $(document).ready(function() {
                 sources.forEach(function(item) {
                     const statusText = item.isActive === 1 ? 'Hoạt động' : 'Ngừng';
                     const rowHtml = `
-                        <tr data-id="${item.id}" data-code="${item.code}">
-                            <td data-prop="code">${item.code}</td>
-                            <td data-prop="name">${item.name}</td>
-                            <td class="text-center" data-prop="isActive" data-value="${item.isActive}">${statusText}</td>
+                        <tr data-id="${item.id}">
+                            <td>${item.code}</td>
+                            <td>${item.name}</td>
+                            <td class="text-center">${statusText}</td>
                             <td>
                                 <button class="btn btn-sm btn-info btn-edit">Sửa</button>
                                 <button class="btn btn-sm btn-danger btn-delete">Xóa</button>
@@ -94,83 +104,33 @@ $(document).ready(function() {
         });
     }
 
+
     $('#btn-search').on('click', function() { fetchAndRender($('#search-input').val()); });
     $('#search-input').on('keypress', function(e) { if (e.which === 13) $('#btn-search').click(); });
 
-    $('#btn-show-add-form').on('click', function() {
-        if ($('#add-new-row').length > 0) return;
-        const $newRow = $templateRow.clone().attr('id', 'add-new-row');
-        $newRow.find('input[name="IsActive"]').prop('checked', true);
-        $tableBody.prepend($newRow);
-        $(this).prop('disabled', true);
-    });
-
-    $tableBody.on('click', '.btn-edit', function() {
-        const $staticRow = $(this).closest('tr');
-        $staticRow.data('original-html', $staticRow.html());
-        
-        const $editRow = $templateRow.clone().removeAttr('id').addClass('editing-row');
-        $editRow.find('input[name="Code"]').val($staticRow.data('code')).prop('disabled', true); 
-        $editRow.find('input[name="Name"]').val($staticRow.find('[data-prop="name"]').text());
-        $editRow.find('input[name="IsActive"]').prop('checked', $staticRow.find('[data-prop="isActive"]').data('value') == 1);
-        $editRow.find('.btn-save').addClass('btn-update').data('id', $staticRow.data('id'));
-
-        $staticRow.html($editRow.html());
-    });
-    
-    $tableBody.on('click', '.btn-cancel', function() {
-        const $row = $(this).closest('tr');
-        if ($row.attr('id') === 'add-new-row') {
-            $row.remove();
-            $('#btn-show-add-form').prop('disabled', false);
-        } else {
-            $row.html($row.data('original-html'));
-        }
-    });
-
-    $tableBody.on('click', '.btn-save', function() {
-        const $row = $(this).closest('tr');
-        const isUpdate = $(this).hasClass('btn-update');
-        const url = isUpdate ? '@Url.Action("Update", "CustomerSources")' : '@Url.Action("Create", "CustomerSources")';
-        
+    $('#btn-save-new-source').on('click', function() {
         const data = {
-            Id: isUpdate ? $(this).data('id') : 0,
-            Code: $row.find('input[name="Code"]').val(),
-            Name: $row.find('input[name="Name"]').val(),
-            IsActive: $row.find('input[name="IsActive"]').is(':checked') ? 1 : 0
+            Code: $('#new-source-code').val(),
+            Name: $('#new-source-name').val(),
+            IsActive: $('#new-source-isactive').is(':checked') ? 1 : 0
         };
 
+        if (!data.Code || !data.Name) {
+            alert('Vui lòng nhập đầy đủ Mã và Tên nguồn.');
+            return;
+        }
+
         $.ajax({
-            url: url,
+            url: '@Url.Action("Create", "CustomerSources")',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(data),
             success: function(response) {
                 if (response.success) {
-                    alert(isUpdate ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
-                    $('#btn-show-add-form').prop('disabled', false);
-                    fetchAndRender($('#search-input').val());
-                } else {
-                    alert('Lỗi: ' + response.message);
-                }
-            }
-        });
-    });
-
-    $tableBody.on('click', '.btn-delete', function() {
-        if (!confirm('Bạn có chắc chắn muốn xóa nguồn khách hàng này?')) return;
-
-        const $row = $(this).closest('tr');
-        const id = $row.data('id');
-
-        $.ajax({
-            url: '@Url.Action("Delete", "CustomerSources")',
-            type: 'POST',
-            data: { id: id },
-            success: function(response) {
-                if (response.success) {
-                    alert(response.message);
-                    $row.fadeOut(300, function() { $(this).remove(); });
+                    alert('Thêm mới thành công!');
+                    $('#addSourceModal').modal('hide'); 
+                    $('#add-new-source-form')[0].reset(); 
+                    fetchAndRender(''); 
                 } else {
                     alert('Lỗi: ' + response.message);
                 }

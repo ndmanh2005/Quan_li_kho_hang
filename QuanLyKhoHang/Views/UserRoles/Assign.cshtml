@@ -1,0 +1,130 @@
+@model QuanLyKhoHang.Models.AssignRoleViewModel
+
+@{
+    ViewData["Title"] = "Phân quyền cho Người dùng";
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                Thông tin người dùng
+            </div>
+            <div class="card-body">
+                <p><strong>Họ và tên:</strong> @Model.FullName</p>
+                <p><strong>Email:</strong> @Model.Email</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                Gán vai trò theo đơn vị
+            </div>
+            <div class="card-body">
+                <form id="assign-role-form">
+                    <input type="hidden" asp-for="UserId" />
+
+                    <div class="mb-3">
+                        <label asp-for="SelectedEnterpriseId" class="form-label">Chọn Đơn vị</label>
+                        <select asp-for="SelectedEnterpriseId" asp-items="Model.AvailableEnterprises" class="form-select">
+                            <option value="">-- Vui lòng chọn một đơn vị --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="SelectedRoleId" class="form-label">Chọn Vai trò</label>
+                        <select asp-for="SelectedRoleId" class="form-select" disabled>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a asp-controller="Users" asp-action="Index" class="btn btn-secondary me-2">Quay lại</a>
+                        <button type="submit" class="btn btn-primary" disabled>Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+$(document).ready(function() {
+    const $enterpriseSelect = $('#SelectedEnterpriseId');
+    const $roleSelect = $('#SelectedRoleId');
+    const $saveButton = $('#assign-role-form button[type="submit"]');
+
+    $enterpriseSelect.on('change', function() {
+        const enterpriseId = $(this).val();
+        const userId = $('#UserId').val();
+
+        $roleSelect.prop('disabled', true).empty(); 
+        $saveButton.prop('disabled', true);
+
+        if (!enterpriseId) return;
+
+        $.ajax({
+            url: '@Url.Action("GetRolesAndUserRole", "UserRoles")',
+            type: 'GET',
+            data: { userId: userId, enterpriseId: enterpriseId },
+            success: function(response) {
+                if (response.availableRoles) {
+                    $roleSelect.append($('<option>', { value: '', text: '-- Chọn vai trò --' }));
+                    response.availableRoles.forEach(function(role) {
+                        $roleSelect.append($('<option>', {
+                            value: role.id,
+                            text: role.name
+                        }));
+                    });
+
+                    if (response.selectedRoleId) {
+                        $roleSelect.val(response.selectedRoleId);
+                    }
+                    
+                    $roleSelect.prop('disabled', false);
+                    $saveButton.prop('disabled', false);
+                }
+            }
+        });
+    });
+
+    $('#assign-role-form').on('submit', function(e) {
+        e.preventDefault();
+
+        const data = {
+            UserId: $('#UserId').val(),
+            SelectedEnterpriseId: $('#SelectedEnterpriseId').val(),
+            SelectedRoleId: $('#SelectedRoleId').val()
+        };
+        
+        if (!data.SelectedEnterpriseId || !data.SelectedRoleId) {
+            alert('Vui lòng chọn đầy đủ Đơn vị và Vai trò.');
+            return;
+        }
+
+        $.ajax({
+            url: '@Url.Action("UpdateAssignment", "UserRoles")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    alert(response.message);
+                    // window.location.href = '@Url.Action("Index", "Users")';
+                } else {
+                    alert('Lỗi: ' + response.message);
+                }
+            }
+        });
+    });
+
+    if($enterpriseSelect.val()) {
+        $enterpriseSelect.trigger('change');
+    }
+});
+</script>
+}
