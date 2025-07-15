@@ -25,5 +25,10 @@ namespace QuanLyKhoHang.Data
         public DbSet<Enterprise> Enterprises { get; set; }
         public DbSet<EnterpriseUser> EnterpriseUsers { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
+
+        public DbSet<Product> Products { get; set; }
+        public DbSet<UnitConversion> UnitConversions { get; set; }
+        public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
+        public DbSet<ComboComponent> ComboComponents { get; set; }
     }
 }

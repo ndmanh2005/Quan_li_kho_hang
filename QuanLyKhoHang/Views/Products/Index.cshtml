@@ -1,0 +1,71 @@
+@model IEnumerable<QuanLyKhoHang.Models.Product>
+
+@{
+    ViewData["Title"] = "Danh mục Hàng hóa";
+    int totalPages = (int)ViewData["TotalPages"];
+    int currentPage = (int)ViewData["CurrentPage"];
+    string searchTerm = ViewData["SearchTerm"] as string;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row mb-3 align-items-center">
+    <div class="col-md-6">
+        <form asp-action="Index" method="get">
+            <div class="input-group">
+                <input type="text" name="searchTerm" class="form-control" placeholder="Nhập mã hoặc tên hàng hóa..." value="@searchTerm">
+                <button class="btn btn-outline-secondary" type="submit">Tìm kiếm</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <a asp-action="Create" class="btn btn-primary">Thêm mới</a>
+        <button class="btn btn-secondary">Đồng bộ</button>
+        <button class="btn btn-info">Nhập từ file</button>
+        <button class="btn btn-success">Xuất dữ liệu</button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Mã</th>
+                <th>Tên</th>
+                <th>Đơn vị tính</th>
+                <th>Giá bán</th>
+                <th style="width: 120px;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Code</td>
+                    <td>@item.Name</td>
+                    <td>@item.UnitId</td> 
+                    <td>@item.Price.ToString("N0")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-info" title="Sửa">
+                            <i class="fa-solid fa-pencil"></i>
+                        </a>
+                        <button class="btn btn-sm btn-danger btn-delete" title="Xóa" data-id="@item.Id">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<nav>
+    <ul class="pagination justify-content-end">
+        @for (int i = 1; i <= totalPages; i++)
+        {
+            <li class="page-item @(i == currentPage ? "active" : "")">
+                <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-searchTerm="@searchTerm">@i</a>
+            </li>
+        }
+    </ul>
+</nav>

@@ -1,0 +1,56 @@
+@model QuanLyKhoHang.Models.ProductViewModel
+@{
+    ViewData["Title"] = "Cập nhật Hàng hóa";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>Chỉnh sửa thông tin chi tiết cho hàng hóa.</p>
+<hr />
+
+<form asp-action="Edit" asp-route-id="@Model.Product.Id" enctype="multipart/form-data" method="post">
+    <partial name="_ProductForm" model="Model" />
+
+    <div class="form-group mt-4 d-flex justify-content-end">
+        <a asp-action="Index" class="btn btn-secondary me-2">Hủy bỏ</a>
+        <input type="submit" value="Lưu thay đổi" class="btn btn-primary" />
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+    function setupDynamicRows(tableBodyId, addButtonId, templateRowId) {
+        function reindexRows() {
+            $('#' + tableBodyId + ' tr').each(function(index) {
+                $(this).find('input, select').each(function() {
+                    if (this.name) {
+                        this.name = this.name.replace(/\[\d+\]/, '[' + index + ']');
+                        this.id = this.id.replace(/_\d+__/, '_' + index + '__');
+                    }
+                });
+            });
+        }
+
+        $('#' + addButtonId).on('click', function() {
+            var newRow = $('#' + templateRowId).clone().removeAttr('id');
+            newRow.find('input, select').each(function() {
+                 if (this.name) {
+                    this.name = this.name.replace('[#]', '[999]'); 
+                }
+            });
+            $('#' + tableBodyId).append(newRow);
+            reindexRows();
+        });
+
+        $('#' + tableBodyId).on('click', '.btn-remove-row', function() {
+            $(this).closest('tr').remove();
+            reindexRows();
+        });
+    }
+
+    $(document).ready(function() {
+        setupDynamicRows('unit-conversion-body', 'btn-add-conversion', 'conversion-template-row');
+        setupDynamicRows('attribute-body', 'btn-add-attribute', 'attribute-template-row');
+    });
+    </script>
+}
